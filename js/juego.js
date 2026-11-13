@@ -20,6 +20,11 @@ const colaCelebraciones = [];
 
 function xpParaSubir(n) { return 150 + 100 * (n - 1); }
 
+function totalXP(j) {
+  const s = o => Object.values(o || {}).reduce((t, v) => t + (Number(v) || 0), 0);
+  return s(j.xpMas) - s(j.xpMenos);
+}
+
 function infoNivel(xp = E.juego.xp) {
   let n = 1, base = 0;
   while (xp >= base + xpParaSubir(n)) { base += xpParaSubir(n); n++; }
@@ -39,7 +44,11 @@ function infoNivel(xp = E.juego.xp) {
 function ganarXP(cant, motivo) {
   if (!cant) return 0;
   const antes = infoNivel().nivel;
-  E.juego.xp = Math.max(0, E.juego.xp + cant);
+  const j = E.juego;
+  j.xpMas = j.xpMas || {}; j.xpMenos = j.xpMenos || {};
+  if (cant > 0) j.xpMas[DISP] = (j.xpMas[DISP] || 0) + cant;
+  else j.xpMenos[DISP] = (j.xpMenos[DISP] || 0) - cant;
+  j.xp = Math.max(0, totalXP(j));
   E.juego.historial.unshift({ fecha: new Date().toISOString(), xp: cant, motivo });
   if (E.juego.historial.length > 60) E.juego.historial.length = 60;
   const despues = infoNivel();

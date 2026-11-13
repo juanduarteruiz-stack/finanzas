@@ -6,6 +6,17 @@
    ========================================================================= */
 
 const CLAVE_ALMACEN = 'finanzas.v1';
+
+// Identificador de este dispositivo (para sumar XP de varios dispositivos sin perder nada).
+const DISP = (() => {
+  let d = null;
+  try { d = localStorage.getItem('finanzas.disp'); } catch { /* sin almacenamiento */ }
+  if (!d) {
+    d = 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    try { localStorage.setItem('finanzas.disp', d); } catch { /* sin almacenamiento */ }
+  }
+  return d;
+})();
 const VERSION_DATOS = 1;
 
 /* ---------- Catálogos base ---------- */
@@ -97,6 +108,8 @@ function estadoNuevo() {
 function juegoNuevo() {
   return {
     xp: 0,
+    xpMas: {},           // {dispositivo: XP ganada}  → se suman entre dispositivos
+    xpMenos: {},         // {dispositivo: XP descontada}
     diasActivos: {},     // {fecha: true} días en que registró algo o confirmó "sin gastos"
     protegidos: {},      // {fecha: true} días cubiertos por un comodín
     sinGasto: {},        // {fecha: true} días confirmados sin gastos
@@ -133,7 +146,9 @@ function migrar(e) {
   const base = estadoNuevo();
   e.ajustes = { ...base.ajustes, ...(e.ajustes || {}) };
   e.ajustes.reparto = { ...base.ajustes.reparto, ...(e.ajustes.reparto || {}) };
+  const xpPorDispositivo = e.juego && e.juego.xpMas;
   e.juego = { ...juegoNuevo(), ...(e.juego || {}) };
+  if (!xpPorDispositivo) { e.juego.xpMas = { [DISP]: e.juego.xp || 0 }; e.juego.xpMenos = {}; }
   for (const k of ['categorias', 'metodos', 'movimientos', 'facturas', 'metas', 'deudas']) if (!Array.isArray(e[k])) e[k] = base[k];
   if (!e.presupuestos) e.presupuestos = {};
   e.version = VERSION_DATOS;
@@ -143,6 +158,7 @@ function migrar(e) {
 function guardar() {
   try {
     localStorage.setItem(CLAVE_ALMACEN, JSON.stringify(E));
+    if (typeof window.alGuardarNube === 'function') window.alGuardarNube();
     return true;
   } catch (err) {
     console.error('No se pudo guardar', err);

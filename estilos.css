@@ -486,3 +486,15 @@ body.ocultar .monto { filter: blur(7px); user-select: none; }
 body.con-hoja .avisos { top: calc(12px + env(safe-area-inset-top, 0px)); bottom: auto; }
 .tarjeta[id] { scroll-margin-top: 118px; }
 .fila-item .mov-sub { white-space: normal; }
+
+/* ---------- Nube y cuenta ---------- */
+.nube-ind { position: relative; }
+.nube-ind svg { width: 22px; height: 22px; }
+.nube-ind::after { content: ''; position: absolute; right: 8px; bottom: 9px; width: 8px; height: 8px; border-radius: 50%; border: 2px solid var(--fondo); background: var(--tinta-3); }
+.nube-ind.bien::after { background: var(--bien); }
+.nube-ind.trabajando::after { background: var(--aviso); }
+.nube-ind.mal::after { background: var(--critico); }
+.cuenta { display: flex; align-items: center; gap: 12px; margin: 8px 0; }
+.cuenta strong, .cuenta small { display: block; }
+.avatar { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; display: grid; place-items: center; background: var(--superficie-2); font-size: 1.4rem; flex: none; }
+.btn .g { width: 18px; height: 18px; vertical-align: -3px; margin-right: 6px; }

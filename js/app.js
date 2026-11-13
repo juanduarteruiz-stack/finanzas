@@ -26,7 +26,20 @@ const ICONOS = {
   ajustes: '<svg viewBox="0 0 24 24"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg>',
   atras: '<svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>',
   borrar: '<svg viewBox="0 0 24 24"><path d="M20 6H9l-6 6 6 6h11a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1zM12 10l4 4M16 10l-4 4"/></svg>',
+  nube: '<svg viewBox="0 0 24 24"><path d="M7 18h10a4 4 0 0 0 .6-7.95A6 6 0 0 0 6.1 9.1 4.5 4.5 0 0 0 7 18z"/></svg>',
 };
+
+function estadoNube() {
+  const e = window.Nube ? window.Nube.estado : 'apagado';
+  return {
+    'al-dia': { clase: 'bien', texto: 'Sincronizado' },
+    subiendo: { clase: 'trabajando', texto: 'Sincronizando…' },
+    conectando: { clase: 'trabajando', texto: 'Conectando…' },
+    'sin-conexion': { clase: 'pausa', texto: 'Sin internet: se sincroniza al volver' },
+    error: { clase: 'mal', texto: 'No se pudo sincronizar' },
+    apagado: { clase: 'pausa', texto: 'Sin sincronizar' },
+  }[e] || { clase: 'pausa', texto: 'Sin sincronizar' };
+}
 
 /* =========================================================================
    Arranque
@@ -106,6 +119,8 @@ function pintarTabs() {
 function pintarBarra(ruta) {
   const ojo = `<button class="icono" data-accion="ocultar" aria-label="${E.ajustes.ocultarMontos ? 'Mostrar montos' : 'Ocultar montos'}">${E.ajustes.ocultarMontos ? ICONOS.ojoNo : ICONOS.ojo}</button>`;
   const ajustes = `<button class="icono" data-ir="ajustes" aria-label="Ajustes">${ICONOS.ajustes}</button>`;
+  const n = window.Nube && window.Nube.usuario ? estadoNube() : null;
+  const nube = n ? `<button class="icono nube-ind ${n.clase}" data-ir="ajustes" aria-label="${n.texto}" title="${n.texto}">${ICONOS.nube}</button>` : '';
   let izq;
   if (ruta === 'inicio') {
     const h = new Date().getHours();
@@ -118,7 +133,7 @@ function pintarBarra(ruta) {
   } else {
     izq = `<h1>${TITULOS[ruta]}</h1>`;
   }
-  $('#barra').innerHTML = `<div class="barra-izq">${izq}</div><div class="barra-der">${ojo}${ruta !== 'ajustes' ? ajustes : ''}</div>`;
+  $('#barra').innerHTML = `<div class="barra-izq">${izq}</div><div class="barra-der">${nube}${ojo}${ruta !== 'ajustes' ? ajustes : ''}</div>`;
 }
 
 /* =========================================================================
@@ -153,6 +168,10 @@ function vistaBienvenida() {
       <button class="btn primario ancho grande" data-accion="b-empezar">Empezar</button>
       <input type="file" id="archivo-respaldo" accept=".json,application/json" hidden>
     </div>
+    ${window.Nube ? `<div class="tarjeta form">
+      <p class="peque">¿Ya usa Finanzas en otro dispositivo?</p>
+      <button class="btn secundario ancho" data-accion="nube-entrar">${ICONO_GOOGLE} Entrar con Google y traer mis datos</button>
+    </div>` : ''}
     <p class="peque centro">🔒 Sus datos se guardan solo en este dispositivo. Nada sale a internet.</p>
   </section>`;
 }
@@ -702,7 +721,8 @@ function vistaLogros() {
 function vistaAjustes() {
   const a = E.ajustes;
   const grupos = ['variable', 'fijo', 'inversion', 'ingreso'];
-  return `<section class="tarjeta form">
+  return `${tarjetaCuenta()}
+    <section class="tarjeta form">
       <h3>Perfil y presupuesto</h3>
       <label class="campo"><span>Nombre</span><input data-ajuste="nombre" value="${esc(a.nombre)}" placeholder="¿Cómo le digo?"></label>
       <label class="campo"><span>Presupuesto mensual del día a día</span><input data-ajuste="presupuestoMes" data-dinero inputmode="numeric" value="${a.presupuestoMes ? pesos(a.presupuestoMes) : ''}" placeholder="$0"><small>Mercado, comida, transporte, antojos. Sin facturas fijas.</small></label>
@@ -754,6 +774,37 @@ function vistaAjustes() {
     </section>
     <p class="peque centro">Finanzas · versión 1 · hecho para usted</p>`;
 }
+
+function tarjetaCuenta() {
+  if (!window.Nube) {
+    return `<section class="tarjeta suave"><h3>☁️ Sincronizar dispositivos</h3>
+      <p class="peque">Para entrar con Google y ver lo mismo en el celular y el computador, abra la app con internet.</p></section>`;
+  }
+  const u = window.Nube.usuario;
+  if (!u) {
+    return `<section class="tarjeta">
+      <h3>☁️ Sincronizar dispositivos</h3>
+      <p class="peque">Entre con su cuenta de Google y vea los mismos datos en el celular y en el computador. Sus datos quedan protegidos: solo usted puede verlos.</p>
+      <button class="btn primario ancho" data-accion="nube-entrar">${ICONO_GOOGLE} Entrar con Google</button>
+    </section>`;
+  }
+  const n = estadoNube();
+  const ult = window.Nube.ultimaSubida;
+  return `<section class="tarjeta">
+    <h3>☁️ Cuenta</h3>
+    <div class="cuenta">
+      ${u.foto ? `<img src="${esc(u.foto)}" alt="" class="avatar" referrerpolicy="no-referrer">` : '<span class="avatar">👤</span>'}
+      <div><strong>${esc(u.nombre || 'Su cuenta')}</strong><small>${esc(u.correo)}</small></div>
+    </div>
+    <p class="peque estado-${n.clase === 'mal' ? 'critico' : n.clase === 'bien' ? 'bien' : 'neutro'}">${n.clase === 'bien' ? '✅' : n.clase === 'mal' ? '⚠️' : '⏳'} ${n.texto}${ult && n.clase === 'bien' ? ` · ${new Date(ult).toLocaleTimeString('es-CO', { hour: 'numeric', minute: '2-digit' })}` : ''}</p>
+    <div class="botonera">
+      <button class="btn secundario" data-accion="nube-sincronizar">🔄 Sincronizar ahora</button>
+      <button class="btn texto" data-accion="nube-salir">Cerrar sesión</button>
+    </div>
+  </section>`;
+}
+
+const ICONO_GOOGLE = '<svg class="g" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>';
 
 /* =========================================================================
    Hoja inferior (registro y formularios)
@@ -1464,6 +1515,13 @@ const ACCIONES = {
     try { await navigator.clipboard.writeText(`${texto} ${url}`); avisar('🔗 Enlace copiado. Péguelo en WhatsApp o donde quiera.'); }
     catch { prompt('Copie este enlace:', url); }
   },
+  'nube-entrar': () => window.Nube && window.Nube.entrar(),
+  'nube-sincronizar': () => { if (window.Nube) { window.Nube.sincronizar(); avisar('🔄 Sincronizando…'); } },
+  'nube-salir': async () => {
+    if (!confirm('¿Cerrar sesión? Sus datos se borran de este dispositivo, pero quedan guardados en su cuenta de Google.')) return;
+    await window.Nube.salir();
+    avisar('Sesión cerrada.');
+  },
   respaldo: () => guardarRespaldo(),
   restaurar: () => {
     const nombre = $('#b-nombre'), pres = $('#b-presupuesto');
@@ -1472,7 +1530,13 @@ const ACCIONES = {
     $('#archivo-respaldo').click();
   },
   'exportar-csv': () => { descargar(`finanzas-movimientos-${hoy()}.csv`, exportarCSV(), 'text/csv;charset=utf-8'); avisar('📊 Archivo listo. Se abre con Excel o Google Sheets.'); },
-  'borrar-todo': () => {
+  'borrar-todo': async () => {
+    if (window.Nube && window.Nube.usuario) {
+      if (!confirm('Su app está conectada a su cuenta. Esto cierra la sesión y borra los datos de este dispositivo; en su cuenta siguen guardados. ¿Continuar?')) return;
+      await window.Nube.salir();
+      avisar('Datos de este dispositivo borrados.');
+      return;
+    }
     if (!confirm('¿Borrar TODOS los datos de este dispositivo? Esto no se puede deshacer. Le recomendamos guardar una copia primero.')) return;
     if (!confirm('¿Está completamente seguro?')) return;
     localStorage.removeItem(CLAVE_ALMACEN);
@@ -1546,6 +1610,11 @@ document.addEventListener('pointerdown', e => {
 document.addEventListener('scroll', ocultarTip, { passive: true });
 
 window.addEventListener('hashchange', () => { if (!$('#hoja').hidden) cerrarHoja(); render(); });
+window.addEventListener('nube-estado', () => {
+  if (!E) return;
+  if (!E.ajustes.onboarding || UI.ruta === 'ajustes') render();
+  else pintarBarra(UI.ruta);
+});
 document.addEventListener('visibilitychange', () => {
   // Si la app quedó abierta de un día para otro, refresca racha y retos.
   if (document.visibilityState === 'visible' && E && E.ajustes.onboarding) { const r = alAbrir(); render(); mostrarCelebraciones(); if (r && r.usados) avisar(`🛡️ Usamos ${plural(r.usados, 'comodín', 'comodines')} y su racha sigue viva.`); }
