@@ -1,7 +1,7 @@
 /* Finanzas · service worker
    Primero la red (para recibir mejoras) y, si no hay internet, la copia guardada.
    Nunca guarda la carpeta datos-privados. */
-const CACHE = 'finanzas-202611131321';
+const CACHE = 'finanzas-202611131325';
 const ARCHIVOS = [
   './', 'index.html', 'estilos.css', 'manifest.webmanifest',
   'js/datos.js', 'js/juego.js', 'js/graficos.js', 'js/app.js', 'js/nube.js', 'js/config-nube.js',

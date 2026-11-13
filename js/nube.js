@@ -98,6 +98,30 @@ function unirJuego(a, b, remotoMasNuevo) {
   return r;
 }
 
+/* ---------- Primera unión: nunca perder datos ---------- */
+
+function vacioOBase(v, base) {
+  return v === undefined || v === null || v === '' || v === 0 || estable(v) === estable(base);
+}
+
+function unirInicial(sec, local, remoto) {
+  if (Array.isArray(remoto) || Array.isArray(local)) {
+    const mapa = new Map((remoto || []).map(x => [x.id, x]));
+    for (const x of local || []) if (x && !mapa.has(x.id)) mapa.set(x.id, x);
+    return [...mapa.values()];
+  }
+  if (sec === 'ajustes') {
+    const base = estadoNuevo().ajustes;
+    const r = { ...(local || {}), ...(remoto || {}) };
+    for (const k of Object.keys(local || {})) {
+      if (vacioOBase(remoto ? remoto[k] : undefined, base[k]) && !vacioOBase(local[k], base[k])) r[k] = local[k];
+    }
+    r.onboarding = !!((local || {}).onboarding || (remoto || {}).onboarding);
+    return r;
+  }
+  return { ...(local || {}), ...(remoto || {}) }; // presupuestos
+}
+
 /* ---------- Bajar cambios ---------- */
 
 function aplicarConfig(snap, inicial) {
@@ -123,8 +147,15 @@ function aplicarConfig(snap, inicial) {
       S.secciones[sec] = { ...info, h: hRemoto, t: r.t };
       continue;
     }
+    if (inicial) {
+      // Primera vez en este dispositivo: se suma lo de aquí con lo de la nube, sin borrar nada.
+      const unido = unirInicial(sec, local, JSON.parse(r.v));
+      if (huella(estable(unido)) !== hLocal) { ponerSeccion(sec, unido); cambio = true; }
+      S.secciones[sec] = { h: hRemoto, t: r.t };
+      continue;
+    }
     const tLocal = info.cambio || (hLocal !== info.h ? Date.now() : 0);
-    if (inicial || hLocal === info.h || r.t >= tLocal) {
+    if (hLocal === info.h || r.t >= tLocal) {
       if (hRemoto !== hLocal) { ponerSeccion(sec, JSON.parse(r.v)); cambio = true; }
       S.secciones[sec] = { h: hRemoto, t: r.t };
     }
