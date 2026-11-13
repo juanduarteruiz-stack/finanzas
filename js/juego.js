@@ -7,9 +7,9 @@
    ========================================================================= */
 
 const NIVELES = [
-  ['Semilla', '🌱'], ['Primer billete', '💵'], ['Marranito', '🐷'], ['Billetera ordenada', '👛'],
-  ['Cazador de hormigas', '🐜'], ['Presupuesto en mano', '📒'], ['Estratega', '🧭'], ['Guardián del billete', '🛡️'],
-  ['Rompe-deudas', '🔨'], ['Maestro del ahorro', '🎓'], ['Inversionista', '📈'], ['Libertad financiera', '🦅'],
+  ['Cachorro', '🐾'], ['Primer billete', '💵'], ['Lobezno', '🐺'], ['Billetera ordenada', '👛'],
+  ['Cazador de hormigas', '🐜'], ['Rastreador del presupuesto', '📒'], ['Estratega de la manada', '🧭'], ['Guardián del billete', '🛡️'],
+  ['Rompe-deudas', '🔨'], ['Lobo alfa del ahorro', '🎓'], ['Inversionista', '📈'], ['Libertad financiera', '🌕'],
 ];
 
 const XP = { registro: 10, alInstante: 5, ahorroODeuda: 10, sinGasto: 20, maxRegistrosDia: 12 };
@@ -249,7 +249,7 @@ const RETOS = [
   { id: 'dias5', emoji: '📅', tipo: 'accion', meta: 5, xp: 50, texto: () => 'Registre algo en 5 días distintos', prog: s => s.diasActivos },
   { id: 'singasto2', emoji: '🧘', tipo: 'accion', meta: 2, xp: 60, texto: () => 'Confirme 2 días sin gastos', prog: s => s.sinGasto },
   { id: 'instante7', emoji: '⚡', tipo: 'accion', meta: 7, xp: 50, texto: () => 'Registre 7 gastos el mismo día en que ocurren', prog: s => s.alInstante },
-  { id: 'ahorro1', emoji: '🐷', tipo: 'accion', meta: 1, xp: 50, texto: () => 'Haga un abono a una meta de ahorro', prog: s => s.ahorros, aplica: () => E.metas.length > 0 },
+  { id: 'ahorro1', emoji: '💰', tipo: 'accion', meta: 1, xp: 50, texto: () => 'Haga un abono a una meta de ahorro', prog: s => s.ahorros, aplica: () => E.metas.length > 0 },
   { id: 'deuda1', emoji: '🔨', tipo: 'accion', meta: 1, xp: 50, texto: () => 'Haga un abono a una deuda', prog: s => s.pagosDeuda, aplica: () => E.deudas.some(d => saldoDeuda(d) > 0) },
   { id: 'tope_calle', emoji: '🍔', tipo: 'limite', xp: 70, metaFn: topeCalle, texto: meta => `Comida de calle, café y domicilios por debajo de ${pesos(meta)}`, prog: s => s.calle, aplica: () => topeCalle() > 0 },
   { id: 'hormigas6', emoji: '🐜', tipo: 'limite', meta: 6, xp: 60, texto: () => 'Máximo 6 gastos hormiga en la semana', prog: s => s.hormigas },

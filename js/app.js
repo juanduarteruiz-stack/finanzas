@@ -13,6 +13,7 @@ const plural = (n, uno, varios) => `${n} ${n === 1 ? uno : varios}`;
 
 const UI = { ruta: null, mesMov: null, filtroMov: 'todos', busqueda: '', catMov: null, mesAnalisis: null };
 let PLANILLA = null; // datos-privados/planilla.json si existe (solo en este computador)
+const URL_PUBLICA = 'https://juanduarteruiz-stack.github.io/finanzas/';
 
 const ICONOS = {
   inicio: '<svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>',
@@ -137,7 +138,7 @@ function vistaBienvenida() {
   const sug = sugerenciaPresupuesto();
   return `
   <section class="bienvenida">
-    <div class="mascota-grande" aria-hidden="true">🐷</div>
+    <div class="mascota-grande" aria-hidden="true">🐺</div>
     <h1>Finanzas</h1>
     <p class="lead">Anote cada gasto en segundos, vea a dónde se va la plata y gane puntos por crear el hábito.</p>
     <div class="tarjeta form">
@@ -179,7 +180,7 @@ function tarjetaVuelta() {
 function tarjetaJuego() {
   const n = infoNivel(), r = racha(), pend = rachaPendienteHoy(), j = E.juego;
   return `<section class="tarjeta juego" data-ir="logros" role="link" tabindex="0" aria-label="Ver logros">
-    <div class="mascota" aria-hidden="true">🐷</div>
+    <div class="mascota" aria-hidden="true">🐺</div>
     <div class="juego-info">
       <div class="fila"><strong>Nivel ${n.nivel} · ${n.emoji} ${esc(n.nombre)}</strong>
         <span class="racha ${pend ? 'pendiente' : ''}" title="Días seguidos registrando">🔥 ${r}</span></div>
@@ -344,7 +345,7 @@ function descripcionMov(m) {
   const extra = [met && met.nombre !== '—' ? met.nombre : null, m.cuotas > 1 ? `${m.cuotas} cuotas` : null].filter(Boolean);
   if (m.tipo === 'ahorro') {
     const mt = meta(m.metaId);
-    return { emoji: mt ? mt.emoji : '🐷', titulo: m.nota || `Ahorro: ${mt ? mt.nombre : 'meta'}`, sub: ['Ahorro', mt ? mt.nombre : null, ...extra].filter(Boolean).join(' · ') };
+    return { emoji: mt ? mt.emoji : '💰', titulo: m.nota || `Ahorro: ${mt ? mt.nombre : 'meta'}`, sub: ['Ahorro', mt ? mt.nombre : null, ...extra].filter(Boolean).join(' · ') };
   }
   if (m.tipo === 'deuda') {
     const d = deuda(m.deudaId);
@@ -683,7 +684,7 @@ function vistaLogros() {
       <ul class="lista-simple">
         <li>📝 Registrar un movimiento: +${XP.registro} XP (hasta ${XP.maxRegistrosDia} al día).</li>
         <li>⚡ Si lo anota el mismo día en que ocurrió: +${XP.alInstante} XP extra.</li>
-        <li>🐷 Abonar a una meta o a una deuda: +${XP.ahorroODeuda} XP extra.</li>
+        <li>💰 Abonar a una meta o a una deuda: +${XP.ahorroODeuda} XP extra.</li>
         <li>🧘 Confirmar un día sin gastos: +${XP.sinGasto} XP.</li>
         <li>🎯 Retos semanales y logros: lo que diga cada uno.</li>
       </ul>
@@ -731,6 +732,12 @@ function vistaAjustes() {
       <h3>Recordatorio diario</h3>
       <p class="peque">Un aviso en su calendario para anotar los gastos del día. Funciona en cualquier celular.</p>
       <div class="fila"><input type="time" id="hora-recordatorio" value="${esc(a.horaRecordatorio || '20:30')}" aria-label="Hora del recordatorio"><button class="btn secundario" data-accion="recordatorio">Agregar a mi calendario</button></div>
+    </section>
+
+    <section class="tarjeta">
+      <h3>🐺 Compartir la app</h3>
+      <p class="peque">Pásele el enlace a quien quiera. Cada persona empieza en blanco y guarda sus datos solo en su celular: nadie ve los suyos ni usted los de ellos. Las mejoras de la app les llegan a todos.</p>
+      <button class="btn secundario" data-accion="compartir-app">📤 Compartir enlace</button>
     </section>
 
     <section class="tarjeta">
@@ -977,7 +984,7 @@ function separarPagatePrimero(form) {
     total += monto;
   }
   guardar(); cerrarHoja(); render();
-  if (total) avisar(`🐷 Separó ${pesos(total)} para sus metas · +${xp} XP`);
+  if (total) avisar(`💰 Separó ${pesos(total)} para sus metas · +${xp} XP`);
   mostrarCelebraciones();
 }
 
@@ -1335,7 +1342,7 @@ function descargarRecordatorio(hora) {
   const ics = [
     'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Finanzas//ES', 'CALSCALE:GREGORIAN', 'BEGIN:VEVENT',
     `UID:finanzas-recordatorio-${Date.now()}@finanzas.local`, `DTSTAMP:${sello}`, `DTSTART:${f}T${hh}${mm}00`, 'DURATION:PT5M',
-    'RRULE:FREQ=DAILY', 'SUMMARY:🐷 Anotar los gastos de hoy',
+    'RRULE:FREQ=DAILY', 'SUMMARY:🐺 Anotar los gastos de hoy',
     'DESCRIPTION:Abra Finanzas y anote lo que gastó hoy. Toma menos de un minuto.',
     'BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:Anotar gastos', 'TRIGGER:PT0M', 'END:VALARM',
     'END:VEVENT', 'END:VCALENDAR',
@@ -1448,6 +1455,14 @@ const ACCIONES = {
     E.ajustes.horaRecordatorio = hora; guardar();
     descargarRecordatorio(hora);
     avisar('📅 Abra el archivo para agregar el recordatorio a su calendario.');
+  },
+  'compartir-app': async () => {
+    const local = ['localhost', '127.0.0.1'].includes(location.hostname) || !location.protocol.startsWith('http');
+    const url = local ? URL_PUBLICA : location.origin + location.pathname;
+    const texto = 'Le comparto Finanzas, una app para anotar los gastos del día a día. Sus datos quedan solo en su celular.';
+    if (navigator.share) { try { await navigator.share({ title: 'Finanzas', text: texto, url }); } catch { /* cancelado */ } return; }
+    try { await navigator.clipboard.writeText(`${texto} ${url}`); avisar('🔗 Enlace copiado. Péguelo en WhatsApp o donde quiera.'); }
+    catch { prompt('Copie este enlace:', url); }
   },
   respaldo: () => guardarRespaldo(),
   restaurar: () => {
